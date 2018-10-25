@@ -247,8 +247,12 @@ namespace Mono.Linker.Steps {
 				return;
 
 			// We don't need to mark overrides until it is possible that the type could be instantiated
-			// Note : The base type is interface check should be removed once we have base type sweeping
-			if (!Annotations.IsInstantiated (method.DeclaringType) && @base.DeclaringType.IsInterface)
+			if (!Annotations.IsInstantiated (method.DeclaringType) && !Annotations.IsBaseRequired (method.DeclaringType))
+				return;
+
+			// If the type is not instantiated, but it's base type is required for some reason, we can still skip marking of the override if the base method
+			// is not abstract
+			if (!Annotations.IsInstantiated (method.DeclaringType) && Annotations.IsBaseRequired (method.DeclaringType) && !@base.IsAbstract)
 				return;
 
 			MarkMethod (method);
@@ -921,7 +925,6 @@ namespace Mono.Linker.Steps {
 			Tracer.Push (type);
 
 			MarkScope (type.Scope);
-			MarkType (type.BaseType);
 			MarkType (type.DeclaringType);
 			MarkCustomAttributes (type);
 			MarkSecurityDeclarations (type);
@@ -1706,8 +1709,15 @@ namespace Mono.Linker.Steps {
 
 			MarkGenericParameterProvider (method);
 
-			if (ShouldMarkAsInstancePossible (method))
+			if (ShouldMarkAsInstancePossible (method)) {
 				MarkRequirementsForInstantiatedTypes (method.DeclaringType);
+				
+				// If it's an extern ctor such as EventHandler's ctor, we won't have any IL to
+				// cause a ctor to be marked in the base type.   We know the base type needs to retain it's base,
+				// and that goes for all base types in the hierarchy 
+				if (!method.HasBody)
+					MarkAllBaseTypesAsRequired (method.DeclaringType);
+			}
 
 			if (IsPropertyMethod (method))
 				MarkProperty (GetProperty (method));
@@ -1758,6 +1768,27 @@ namespace Mono.Linker.Steps {
 		{
 		}
 
+		void MarkAllBaseTypesAsRequired (TypeDefinition type)
+		{
+			var baseTypeReference = type.BaseType;
+			while (baseTypeReference != null) {
+				var resolved = baseTypeReference.Resolve ();
+				if (resolved == null) {
+					HandleUnresolvedType (baseTypeReference);
+					return;
+				}
+
+				MarkBaseTypeAsRequired (resolved);
+				baseTypeReference = resolved.BaseType;
+			}
+		}
+
+		void MarkBaseTypeAsRequired (TypeDefinition type)
+		{
+			Annotations.MarkBaseRequired (type);
+			MarkType (type.BaseType);
+		}
+
 		protected virtual bool ShouldMarkAsInstancePossible (MethodDefinition method)
 		{
 			// We don't need to mark it multiple times
@@ -1778,9 +1809,194 @@ namespace Mono.Linker.Steps {
 			if (Annotations.IsInstantiated (type))
 				return;
 			Annotations.MarkInstantiated (type);
+			MarkBaseTypeAsRequired (type);
 			MarkInterfaceImplementations (type);
 			MarkMethodsIf (type.Methods, IsVirtualAndHasPreservedParent);
 			DoAdditionalInstantiatedTypeProcessing (type);
+		}
+
+		void MarkBaseRequirementsFromInstruction (MethodBody callingBody)
+		{
+			var type = callingBody.Method.DeclaringType;
+
+			// We do not currently change the base type of value types
+			if (type.IsValueType)
+				return;
+
+			var bases = new List<TypeDefinition> ();
+			var current = type.BaseType;
+
+			while (current != null)
+			{
+				var resolved = current.Resolve ();
+				if (resolved == null)
+				{
+					HandleUnresolvedType (current);
+					return;
+				}
+
+				// Exclude Object.  We don't care about that
+				if (resolved.BaseType == null)
+					break;
+				
+				bases.Add (resolved);
+				current = resolved.BaseType;
+			}
+
+			// No need to do this for types derived from object.  It already has the lowest base class
+			if (bases.Count == 0)
+				return;
+
+			foreach (var instruction in callingBody.Instructions) {
+				if (instruction.Operand == null)
+					continue;
+
+				bool basesRequired = false;
+
+				if (instruction.Operand is FieldReference fieldReference)
+				{
+					basesRequired = IsTypeHierarchyRequiredFor (fieldReference, bases, type);
+				}
+				else if (instruction.Operand is MethodReference methodReference)
+				{
+					basesRequired = IsTypeHierarchyRequiredFor (methodReference, bases, type); 
+				}
+				else if (instruction.Operand is PropertyReference propertyReference)
+				{
+					//throw new NotImplementedException();
+				}
+				else if (instruction.Operand is EventReference eventReference)
+				{
+					//throw new NotImplementedException();
+				}
+				else if (instruction.Operand is TypeReference typeReference)
+				{
+					basesRequired = IsTypeHierarchyRequiredFor (typeReference, bases, type);
+				}
+
+				if (basesRequired) {
+					MarkBaseTypeAsRequired (type);
+					
+					// We could mark only the bases that are really needed.  There could be unnecessary classes in between that we don't need
+					// but that is not worth the effort at this point
+					foreach (var @base in bases)
+						MarkBaseTypeAsRequired (@base);
+
+					// We only need to do this once for now since we marked all bases.
+					return;
+				}
+			}
+		}
+
+		bool IsTypeHierarchyRequiredFor (FieldReference field,  List<TypeDefinition> basesOfBodyType, TypeDefinition bodyType)
+		{
+			var resolved = field.Resolve ();
+			if (resolved == null) {
+				HandleUnresolvedField (field);
+				return true;
+			}
+			
+			var fromBase = basesOfBodyType.FirstOrDefault (b => resolved.DeclaringType == b);
+			if (fromBase != null)
+			{
+				if (!resolved.IsStatic)
+					return true;
+
+				if (resolved.IsPublic)
+					return false;
+
+				// protected
+				if (resolved.IsFamily)
+					return true;
+
+				// It must be internal.  Trust that if the compiler allowed it we can continue to access
+				if (!resolved.IsPrivate)
+					return false;
+				
+				return false;
+			}
+			
+			if (IsTypeHierarchyRequiredForType (resolved.DeclaringType, basesOfBodyType, bodyType))
+				return true;
+
+			return false;
+		}
+
+		bool IsTypeHierarchyRequiredFor (MethodReference method,  List<TypeDefinition> basesOfBodyType, TypeDefinition bodyType)
+		{
+			var resolved = method.Resolve ();
+			if (resolved == null) {
+				HandleUnresolvedMethod (method);
+				return true;
+			}
+			
+			var fromBase = basesOfBodyType.FirstOrDefault (b => resolved.DeclaringType == b);
+			if (fromBase != null)
+			{
+				if (!resolved.IsStatic)
+					return true;
+
+				if (resolved.IsPublic)
+					return false;
+
+				// protected
+				if (resolved.IsFamily)
+					return true;
+
+				// It must be internal.  Trust that if the compiler allowed it we can continue to access
+				if (!resolved.IsPrivate)
+					return false;
+				
+				return false;
+			}
+			
+			// If the method wasn't declared on a base type of the current body, then we need to check if any of the methods types parents are base types
+			// of the body
+			if (IsTypeHierarchyRequiredForType (resolved.DeclaringType, basesOfBodyType, bodyType))
+				return true;
+
+			return false;
+		}
+
+		bool IsTypeHierarchyRequiredFor (TypeReference type, List<TypeDefinition> basesOfBodyType, TypeDefinition bodyType)
+		{
+			var resolved = type.Resolve ();
+			if (resolved == null) {
+				HandleUnresolvedType (type);
+			}
+
+			if (IsTypeHierarchyRequiredForType (resolved, basesOfBodyType, bodyType))
+				return true;
+
+			return false;
+		}
+
+		bool IsTypeHierarchyRequiredForType (TypeDefinition memberType, List<TypeDefinition> basesOfBodyType, TypeDefinition bodyType)
+		{
+			var current = memberType;
+			var parentsOfMemberType = new List<TypeDefinition> ();
+			TypeDefinition foundBase = null;
+			while (current != null) {
+				foundBase = basesOfBodyType.FirstOrDefault (b => current == b);
+				parentsOfMemberType.Add (current);
+				if (foundBase != null) {
+					break;
+				}
+
+				current = current.DeclaringType;
+			}
+
+			if (foundBase == null)
+				return false;
+
+			if (memberType.IsPublic)
+				return false;
+
+			if (memberType.IsNestedPublic) {
+				return parentsOfMemberType.Any (p => p != foundBase && !p.IsNestedPublic);
+			}
+
+			return true;
 		}
 
 		void MarkBaseMethods (MethodDefinition method)
@@ -1788,6 +2004,9 @@ namespace Mono.Linker.Steps {
 			var base_methods = Annotations.GetBaseMethods (method);
 			if (base_methods == null)
 				return;
+
+			// Once an override method is marked for any reason we can no longer change the base class
+			MarkBaseTypeAsRequired (method.DeclaringType);
 
 			foreach (MethodDefinition base_method in base_methods) {
 				if (base_method.DeclaringType.IsInterface && !method.DeclaringType.IsInterface)
@@ -1924,6 +2143,7 @@ namespace Mono.Linker.Steps {
 			foreach (Instruction instruction in body.Instructions)
 				MarkInstruction (instruction);
 
+			MarkBaseRequirementsFromInstruction (body);
 			MarkThingsUsedViaReflection (body);
 		}
 
@@ -1971,6 +2191,13 @@ namespace Mono.Linker.Steps {
 		}
 
 		protected virtual void HandleUnresolvedMethod (MethodReference reference)
+		{
+			if (!_context.IgnoreUnresolved) {
+				throw new ResolutionException (reference);
+			}
+		}
+
+		protected virtual void HandleUnresolvedField (FieldReference reference)
 		{
 			if (!_context.IgnoreUnresolved) {
 				throw new ResolutionException (reference);
