@@ -3,17 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 
-namespace Mono.Linker.Steps
-{
+namespace Mono.Linker.Steps {
 	// TODO by Mike : Clean up and find a better home
-	static class BaseUtils
-	{
-//		public static bool IsTypeHierarchyRequiredFor<T>(T item, TypeDefinition visibilityScope, Action<T> handleUnresolved, Func<T, List<TypeDefinition>, TypeDefinition, Action<T>> predicate)
-//		{
-//			
-//		}
-
-		public static bool NeedToCheckTypeHierarchy(TypeDefinition visibilityScope, Action<TypeReference> handleUnresolved, out TypeDefinition[] basesOfScope)
+	static class BaseUtils {
+		public static bool NeedToCheckTypeHierarchy (TypeDefinition visibilityScope, Action<TypeReference> handleUnresolved, out TypeDefinition[] basesOfScope)
 		{
 			basesOfScope = null;
 			
@@ -38,8 +31,6 @@ namespace Mono.Linker.Steps
 				foreach (var generic in genericInstanceType.GenericArguments)
 					yield return generic;
 			}
-
-//			yield break;
 		}
 		
 		public static IEnumerable<TypeReference> AllGenericTypesFor (MethodReference method)
@@ -50,8 +41,6 @@ namespace Mono.Linker.Steps
 				foreach (var generic in genericInstanceMethod.GenericArguments)
 					yield return generic;
 			}
-
-			//yield break;
 		}
 		
 		public static List<TypeDefinition> CollectBases (TypeDefinition type, Action<TypeReference> handleUnresolved)

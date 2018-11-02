@@ -2003,13 +2003,6 @@ namespace Mono.Linker.Steps {
 
 			return false;
 		}
-//
-//		bool MarkTypeHierarchyIfRequiredFor<T>(T item, TypeDefinition visibilityScope, Action<T> handleUnresolved, Func<T, List<TypeDefinition>, TypeDefinition, Action<T>> predicate)
-//		{
-//			if(BaseUtils.IsTypeHierarchyRequiredFor(item, visibilityScope, handleUnresolved, predicate))
-//				MarkBaseHierarchyAsRequired(visibilityScope, b);
-//		}
-
 
 		void MarkBaseMethods (MethodDefinition method)
 		{
