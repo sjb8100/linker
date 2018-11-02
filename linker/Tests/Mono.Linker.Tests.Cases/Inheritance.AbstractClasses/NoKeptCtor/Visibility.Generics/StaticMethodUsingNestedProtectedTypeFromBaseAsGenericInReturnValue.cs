@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class StaticMethodUsingNestedProtectedTypeFromBaseInReturnValue {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility.Generics {
+	public class StaticMethodUsingNestedProtectedTypeFromBaseAsGenericInReturnValue {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
@@ -23,13 +23,17 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 			[Kept]
 			public static void StaticMethod ()
 			{
-				Helper();
+				Helper ();
 			}
 
 			[Kept]
-			private static NestedType Helper()
+			private static Container<NestedType> Helper ()
 			{
 				return null;
+			}
+			
+			[Kept]
+			class Container<T> {
 			}
 		}
 	}

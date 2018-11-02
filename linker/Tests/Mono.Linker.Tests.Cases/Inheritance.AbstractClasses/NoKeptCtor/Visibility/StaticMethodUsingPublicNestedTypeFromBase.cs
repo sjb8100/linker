@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class UsePublicStaticMethodFromBaseType {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility {
+	public class StaticMethodUsingPublicNestedTypeFromBase {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
@@ -10,8 +10,12 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		[Kept]
 		abstract class Base {
 			[Kept]
-			public static void Foo ()
-			{
+			[KeptMember (".ctor()")]
+			public class NestedType {
+				[Kept]
+				public void Foo ()
+				{
+				}
 			}
 		}
 
@@ -20,7 +24,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 			[Kept]
 			public static void StaticMethod ()
 			{
-				Foo ();
+				new NestedType ().Foo ();
 			}
 		}
 	}

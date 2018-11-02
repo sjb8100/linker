@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class StaticPropertyWithNestedPublicGenericFromBase {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility {
+	public class StaticFieldWithNestedPublicGenericFromBase {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
@@ -20,13 +20,12 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		[Kept]
 		class StaticMethodOnlyUsed : Base {
 			[Kept]
-			[KeptBackingField]
-			private static Container<NestedType> Property { get; [Kept] set; }
+			private static Container<NestedType> field;
 			
 			[Kept]
 			public static void StaticMethod ()
 			{
-				Property = null;
+				field = null;
 			}
 
 			[Kept]

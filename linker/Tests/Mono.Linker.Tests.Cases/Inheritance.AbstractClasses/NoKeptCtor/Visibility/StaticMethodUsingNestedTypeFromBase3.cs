@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class StaticMethodUsingNestedProtectedTypeFromBaseAsGenericInParameter {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility {
+	public class StaticMethodUsingNestedTypeFromBase3 {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
@@ -11,8 +11,8 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		abstract class Base {
 			[Kept]
 			protected class NestedType {
-				public void Foo ()
-				{
+				[Kept]
+				public class NestedType2 {
 				}
 			}
 		}
@@ -23,17 +23,22 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 			[Kept]
 			public static void StaticMethod ()
 			{
-				Helper (null);
+				if (GetAValue () is NestedType.NestedType2)
+				{
+					Helper ();
+				}
 			}
 
 			[Kept]
-			private static void Helper(Container<NestedType> arg)
+			static void Helper ()
 			{
 			}
-		}
 
-		[Kept]
-		class Container<T> {
+			[Kept]
+			static object GetAValue ()
+			{
+				return null;
+			}
 		}
 	}
 }
