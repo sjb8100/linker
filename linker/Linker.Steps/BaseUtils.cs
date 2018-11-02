@@ -25,21 +25,84 @@ namespace Mono.Linker.Steps {
 		
 		public static IEnumerable<TypeReference> AllGenericTypesFor (TypeReference type)
 		{
-			if (type is GenericInstanceType genericInstanceType)
-			{
-				// TODO : Nested?  Distinct?
-				foreach (var generic in genericInstanceType.GenericArguments)
+			if (type.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+			
+			if (type is IGenericInstance genericInstanceType) {
+				foreach (var generic in AllGenericTypesFor (genericInstanceType)) {
 					yield return generic;
+				}
 			}
 		}
 		
 		public static IEnumerable<TypeReference> AllGenericTypesFor (MethodReference method)
 		{
 			// TODO by Mike : Do I need this?  ProcessMethod is too late a point to use this.  When would I call this?
-			if (method is GenericInstanceMethod genericInstanceMethod)
+			if (method is IGenericInstance genericInstanceMethod)
 			{
-				foreach (var generic in genericInstanceMethod.GenericArguments)
+				if (method.FullName.Contains("Mono.Linker"))
+					Console.WriteLine();
+				
+				foreach (var generic in AllGenericTypesFor (genericInstanceMethod))
 					yield return generic;
+			}
+
+			foreach (var generic in AllGenericTypesFor (method.DeclaringType))
+				yield return generic;
+		}
+		
+		private static IEnumerable<TypeReference> AllGenericTypesFor (IGenericInstance instance)
+		{
+			// TODO : Nested?  Distinct?
+			foreach (var generic in instance.GenericArguments)
+			{
+				if (generic is GenericParameter)
+					continue;
+
+				yield return generic;
+			}
+		}
+
+		public static IEnumerable<TypeReference> ConstraintsFor (TypeReference type)
+		{
+			if (type is IGenericInstance genericInstanceType) {
+//				foreach (var generic in ConstraintsFor (genericInstanceType)) {
+//					yield return generic;
+//				}
+				
+				throw new NotImplementedException();
+			}
+			
+			foreach (var genericParameter in type.GenericParameters)
+			{
+				foreach (var constraint in genericParameter.Constraints)
+					yield return constraint;
+			}
+		}
+
+		public static IEnumerable<TypeReference> ConstraintsFor (MethodReference method)
+		{
+			foreach (var genericParameter in method.GenericParameters)
+			{
+				foreach (var constraint in genericParameter.Constraints)
+					yield return constraint;
+			}
+			
+			if (method is IGenericInstance genericInstanceMethod) {
+				throw new NotImplementedException();
+			}
+			
+			foreach (var generic in ConstraintsFor (method.DeclaringType))
+				yield return generic;
+		}
+
+		private static IEnumerable<TypeReference> ConstraintsFor (IGenericInstance instance)
+		{
+			foreach (var generic in instance.GenericArguments) {
+				if (generic is GenericParameter parameter) {
+					foreach (var constraint in parameter.Constraints)
+						yield return constraint;
+				}
 			}
 		}
 		

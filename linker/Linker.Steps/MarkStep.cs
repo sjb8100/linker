@@ -1835,27 +1835,13 @@ namespace Mono.Linker.Steps {
 			MarkTypeHierarchyIfRequiredFor (field, field.DeclaringType);
 		}
 
-		bool MarkBaseRequirements(MethodDefinition method)
+		void MarkBaseRequirements(MethodDefinition method)
 		{
-			return MarkTypeHierarchyIfRequiredFor (method, method.DeclaringType);
-//			return MarkBaseRequirements(method, method.DeclaringType);
-		}
+			MarkTypeHierarchyIfRequiredFor (method, method.DeclaringType);
 
-//		bool MarkBaseRequirements (MethodReference method, TypeDefinition visibilityScope)
-//		{
-//			if (method.FullName.Contains("Mono.Linker"))
-//				Console.WriteLine();
-//
-//			if (MarkTypeHierarchyIfRequiredFor (method.ReturnType, visibilityScope))
-//				return true;
-//
-//			foreach (var parameter in method.Parameters) {
-//				if (MarkTypeHierarchyIfRequiredFor (parameter.ParameterType, visibilityScope))
-//					return true;
+//			foreach (var constraint in BaseUtils.ConstraintsFor(method)) {
 //			}
-//
-//			return false;
-//		}
+		}
 
 		void MarkBaseRequirements (PropertyDefinition property)
 		{
@@ -1865,6 +1851,9 @@ namespace Mono.Linker.Steps {
 
 		void MarkBaseRequirements (MethodBody body)
 		{
+			if (body.Method.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+			
 			var type = body.Method.DeclaringType;
 
 			// We do not currently change the base type of value types
@@ -1903,8 +1892,29 @@ namespace Mono.Linker.Steps {
 		
 		bool MarkBaseRequirementsFromBody (MethodReference method, MethodBody body)
 		{
-			if (MarkTypeHierarchyIfRequiredFor(method, body.Method.DeclaringType))
-				return true;
+			MarkTypeHierarchyIfRequiredFor(method, body.Method.DeclaringType);
+
+			var generics = BaseUtils.AllGenericTypesFor(method).ToArray();
+			
+			if (method.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+
+			var resolved = method.Resolve();
+			if (resolved == null)
+			{
+				HandleUnresolvedMethod(method);
+				return false;
+			}
+
+			var constraints = BaseUtils.ConstraintsFor(resolved).ToArray();
+
+			if (generics.Length > 0 && constraints.Length > 0)
+			{
+				if (method.FullName.Contains("Mono.Linker"))
+					Console.WriteLine();
+				
+				throw new NotImplementedException("TODO by Mike : Implement.  Write more tests");
+			}
 
 			return false;
 
@@ -1913,6 +1923,12 @@ namespace Mono.Linker.Steps {
 		
 		bool MarkBaseRequirementsFromBody (TypeReference type, MethodBody body)
 		{
+			if (type.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+
+			if (type is GenericParameter)
+				return false;
+			
 			return MarkTypeHierarchyIfRequiredFor (type, body.Method.DeclaringType);
 		}
 
@@ -1959,6 +1975,9 @@ namespace Mono.Linker.Steps {
 				if (MarkTypeHierarchyIfRequiredFor(parameter.ParameterType, visibilityScope))
 					return true;
 			}
+			
+			if (method.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
 
 			foreach (var generic in BaseUtils.AllGenericTypesFor (method)) {
 				if (MarkTypeHierarchyIfRequiredFor (generic, visibilityScope))
@@ -1996,8 +2015,8 @@ namespace Mono.Linker.Steps {
 			if (!BaseUtils.NeedToCheckTypeHierarchy (visibilityScope, HandleUnresolvedType, out TypeDefinition [] basesOfScope))
 				return false;
 
-			if (BaseUtils.IsTypeHierarchyRequiredFor(type, basesOfScope, visibilityScope, HandleUnresolvedType)) {
-				MarkBaseHierarchyAsRequired(visibilityScope, basesOfScope);
+			if (BaseUtils.IsTypeHierarchyRequiredFor (type, basesOfScope, visibilityScope, HandleUnresolvedType)) {
+				MarkBaseHierarchyAsRequired (visibilityScope, basesOfScope);
 				return true;
 			}
 
