@@ -201,6 +201,7 @@
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericOnType2.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\StaticMethodUsingLocalVariableVisibleFromBase.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\StaticMethodUsingNestedPublicTypeFromBaseInReturnValue.cs" />
+    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\StaticMethodUsingNestedPublicValueTypeFromBaseAsParameter.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\StaticMethodUsingNestedTypeFromBase.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\StaticMethodUsingNestedTypeFromBase2.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\StaticMethodUsingNestedTypeFromBase3.cs" />

@@ -20,6 +20,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		[Kept]
 		class StaticMethodOnlyUsed : Base {
 			[Kept]
+			[KeptBackingField]
 			private static Container<NestedType> Property { get; [Kept] set; }
 			
 			[Kept]

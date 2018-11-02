@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
 namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class StaticPropertyWithNestedProtectedGenericFromBase {
+	public class StaticMethodUsingNestedPublicValueTypeFromBaseAsParameter {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
@@ -10,7 +10,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		[Kept]
 		abstract class Base {
 			[Kept]
-			protected class NestedType {
+			public struct NestedType {
 				public void Foo ()
 				{
 				}
@@ -18,20 +18,16 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		}
 
 		[Kept]
-		[KeptBaseType (typeof (Base))]
 		class StaticMethodOnlyUsed : Base {
-			[Kept]
-			[KeptBackingField]
-			private static Container<NestedType> Property { get; [Kept] set; }
-			
 			[Kept]
 			public static void StaticMethod ()
 			{
-				Property = null;
+				Helper (default (NestedType));
 			}
 
 			[Kept]
-			class Container<T> {
+			private static void Helper (NestedType arg)
+			{
 			}
 		}
 	}
