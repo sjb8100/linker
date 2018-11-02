@@ -1835,40 +1835,12 @@ namespace Mono.Linker.Steps {
 		void MarkBaseRequirements (MethodDefinition method)
 		{
 			MarkTypeHierarchyIfRequiredFor (method.ReturnType, method.DeclaringType);
-//			var type = method.DeclaringType;
-//			// We do not currently change the base type of value types
-//			if (type.IsValueType)
-//				return;
-//
-//			var bases = CollectBases (type);
-//
-//			// No need to do this for types derived from object.  It already has the lowest base class
-//			if (bases == null || bases.Count == 0)
-//				return;
-//
-//			if (IsTypeHierarchyRequiredFor (method, bases, type))
-//				MarkBaseHierarchyAsRequired (type, bases);
 		}
 
 		void MarkBaseRequirements (PropertyDefinition property)
 		{
 			// TODO : Is this needed?  
 			throw new NotImplementedException();
-		}
-		
-		bool MarkBaseRequirementsFromBody (FieldReference field, MethodBody body)
-		{
-			return MarkTypeHierarchyIfRequiredFor(field, body.Method.DeclaringType);
-		}
-		
-		bool MarkBaseRequirementsFromBody (MethodReference method, MethodBody body)
-		{
-			return MarkTypeHierarchyIfRequiredFor(method, body.Method.DeclaringType);
-		}
-		
-		bool MarkBaseRequirementsFromBody (TypeReference type, MethodBody body)
-		{
-			return MarkTypeHierarchyIfRequiredFor(type, body.Method.DeclaringType);
 		}
 
 		void MarkBaseRequirements (MethodBody body)
@@ -1903,28 +1875,40 @@ namespace Mono.Linker.Steps {
 				}
 			}
 		}
-
-		bool MarkTypeHierarchyIfRequiredFor(FieldReference field, TypeDefinition visibilityScope)
+		
+		bool MarkBaseRequirementsFromBody (FieldReference field, MethodBody body)
 		{
-			if (visibilityScope.IsValueType)
-				return false;
-			
-			var basesOfBody = BaseUtils.CollectBases (visibilityScope, HandleUnresolvedType);
+			return MarkTypeHierarchyIfRequiredFor (field, body.Method.DeclaringType);
+		}
+		
+		bool MarkBaseRequirementsFromBody (MethodReference method, MethodBody body)
+		{
+			return MarkTypeHierarchyIfRequiredFor (method, body.Method.DeclaringType);
+		}
+		
+		bool MarkBaseRequirementsFromBody (TypeReference type, MethodBody body)
+		{
+			return MarkTypeHierarchyIfRequiredFor (type, body.Method.DeclaringType);
+		}
 
-			// No need to do this for types derived from object.  It already has the lowest base class
-			if (basesOfBody == null || basesOfBody.Count == 0)
+		bool MarkTypeHierarchyIfRequiredFor (FieldReference field, TypeDefinition visibilityScope)
+		{
+			if (!BaseUtils.NeedToCheckTypeHierarchy (visibilityScope, HandleUnresolvedType, out TypeDefinition [] basesOfScope))
 				return false;
 
-			if (BaseUtils.IsTypeHierarchyRequiredFor(field, basesOfBody, visibilityScope, HandleUnresolvedField)) {
-				MarkBaseHierarchyAsRequired(visibilityScope, basesOfBody);
+			if (BaseUtils.IsTypeHierarchyRequiredFor (field, basesOfScope, visibilityScope, HandleUnresolvedField)) {
+				MarkBaseHierarchyAsRequired (visibilityScope, basesOfScope);
 				return true;
 			}
 
 			return false;
 		}
 
-		bool MarkTypeHierarchyIfRequiredFor(MethodReference method, TypeDefinition visibilityScope)
+		bool MarkTypeHierarchyIfRequiredFor (MethodReference method, TypeDefinition visibilityScope)
 		{
+			if (method.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+			
 			// TODO : Is this where to check for generic instance methods?
 //			var resolved = method.Resolve();
 //			if (resolved == null)
@@ -1932,24 +1916,18 @@ namespace Mono.Linker.Steps {
 //				HandleUnresolvedMethod(method);
 //				return false;
 //			}
-			if (visibilityScope.IsValueType)
+			if (!BaseUtils.NeedToCheckTypeHierarchy (visibilityScope, HandleUnresolvedType, out TypeDefinition [] basesOfScope))
 				return false;
 			
-			var basesOfBody = BaseUtils.CollectBases (visibilityScope, HandleUnresolvedType);
-
-			// No need to do this for types derived from object.  It already has the lowest base class
-			if (basesOfBody == null || basesOfBody.Count == 0)
-				return false;
-			
-			if (BaseUtils.IsTypeHierarchyRequiredFor (method, basesOfBody, visibilityScope, HandleUnresolvedMethod)) {
-				MarkBaseHierarchyAsRequired (visibilityScope, basesOfBody);
+			if (BaseUtils.IsTypeHierarchyRequiredFor (method, basesOfScope, visibilityScope, HandleUnresolvedMethod)) {
+				MarkBaseHierarchyAsRequired (visibilityScope, basesOfScope);
 				return true;
 			}
 
 			return false;
 		}
 
-		bool MarkTypeHierarchyIfRequiredFor(TypeReference type, TypeDefinition visibilityScope)
+		bool MarkTypeHierarchyIfRequiredFor (TypeReference type, TypeDefinition visibilityScope)
 		{
 			if (visibilityScope.IsValueType)
 				return false;
@@ -1974,26 +1952,22 @@ namespace Mono.Linker.Steps {
 
 		bool MarkTypeHierarchyIfRequiredFor (TypeDefinition type, TypeDefinition visibilityScope)
 		{
-			// We do not currently change the base type of value types
-			if (visibilityScope.IsValueType)
-				return false;
-			
-			if (type.FullName.Contains("Mono.Linker"))
-				Console.WriteLine();
-
-			var basesOfBody = BaseUtils.CollectBases (visibilityScope, HandleUnresolvedType);
-
-			// No need to do this for types derived from object.  It already has the lowest base class
-			if (basesOfBody == null || basesOfBody.Count == 0)
+			if (!BaseUtils.NeedToCheckTypeHierarchy (visibilityScope, HandleUnresolvedType, out TypeDefinition [] basesOfScope))
 				return false;
 
-			if (BaseUtils.IsTypeHierarchyRequiredFor(type, basesOfBody, visibilityScope, HandleUnresolvedType)) {
-				MarkBaseHierarchyAsRequired(visibilityScope, basesOfBody);
+			if (BaseUtils.IsTypeHierarchyRequiredFor(type, basesOfScope, visibilityScope, HandleUnresolvedType)) {
+				MarkBaseHierarchyAsRequired(visibilityScope, basesOfScope);
 				return true;
 			}
 
 			return false;
 		}
+//
+//		bool MarkTypeHierarchyIfRequiredFor<T>(T item, TypeDefinition visibilityScope, Action<T> handleUnresolved, Func<T, List<TypeDefinition>, TypeDefinition, Action<T>> predicate)
+//		{
+//			if(BaseUtils.IsTypeHierarchyRequiredFor(item, visibilityScope, handleUnresolved, predicate))
+//				MarkBaseHierarchyAsRequired(visibilityScope, b);
+//		}
 
 
 		void MarkBaseMethods (MethodDefinition method)

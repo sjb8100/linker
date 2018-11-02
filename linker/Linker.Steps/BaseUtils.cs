@@ -8,6 +8,28 @@ namespace Mono.Linker.Steps
 	// TODO by Mike : Clean up and find a better home
 	static class BaseUtils
 	{
+//		public static bool IsTypeHierarchyRequiredFor<T>(T item, TypeDefinition visibilityScope, Action<T> handleUnresolved, Func<T, List<TypeDefinition>, TypeDefinition, Action<T>> predicate)
+//		{
+//			
+//		}
+
+		public static bool NeedToCheckTypeHierarchy(TypeDefinition visibilityScope, Action<TypeReference> handleUnresolved, out TypeDefinition[] basesOfScope)
+		{
+			basesOfScope = null;
+			
+			// We do not currently change the base type of value types
+			if (visibilityScope.IsValueType)
+				return false;
+
+			basesOfScope = CollectBases (visibilityScope, handleUnresolved)?.ToArray ();
+
+			// No need to do this for types derived from object.  It already has the lowest base class
+			if (basesOfScope == null || basesOfScope.Length == 0)
+				return false;
+
+			return true;
+		}
+		
 		public static IEnumerable<TypeReference> AllGenericTypesFor (TypeReference type)
 		{
 			if (type is GenericInstanceType genericInstanceType)
@@ -54,7 +76,7 @@ namespace Mono.Linker.Steps
 			return bases;
 		}
 		
-		public static bool IsTypeHierarchyRequiredFor (FieldReference field,  List<TypeDefinition> basesOfScope, TypeDefinition visibilityScope, Action<FieldReference> handleUnresolved)
+		public static bool IsTypeHierarchyRequiredFor (FieldReference field, TypeDefinition [] basesOfScope, TypeDefinition visibilityScope, Action<FieldReference> handleUnresolved)
 		{
 			var resolved = field.Resolve ();
 			if (resolved == null) {
@@ -88,7 +110,7 @@ namespace Mono.Linker.Steps
 			return false;
 		}
 		
-		public static bool IsTypeHierarchyRequiredFor (MethodReference method,  List<TypeDefinition> basesOfScope, TypeDefinition visibilityScope, Action<MethodReference> handleUnresolved)
+		public static bool IsTypeHierarchyRequiredFor (MethodReference method,  TypeDefinition [] basesOfScope, TypeDefinition visibilityScope, Action<MethodReference> handleUnresolved)
 		{
 			var resolved = method.Resolve ();
 			if (resolved == null) {
@@ -124,7 +146,7 @@ namespace Mono.Linker.Steps
 			return false;
 		}
 		
-		public static bool IsTypeHierarchyRequiredFor (TypeReference type, List<TypeDefinition> basesOfScope, TypeDefinition visibilityScope, Action<TypeReference> handleUnresolved)
+		public static bool IsTypeHierarchyRequiredFor (TypeReference type, TypeDefinition [] basesOfScope, TypeDefinition visibilityScope, Action<TypeReference> handleUnresolved)
 		{
 			if(type.FullName.Contains("Mono.Linker"))
 				Console.WriteLine();
@@ -144,7 +166,7 @@ namespace Mono.Linker.Steps
 			return false;
 		}
 		
-		public static bool IsTypeHierarchyRequiredForType (TypeDefinition memberType, List<TypeDefinition> basesOfBodyType, TypeDefinition visibilityScope)
+		public static bool IsTypeHierarchyRequiredForType (TypeDefinition memberType, TypeDefinition [] basesOfBodyType, TypeDefinition visibilityScope)
 		{
 			var current = memberType;
 			var parentsOfMemberType = new List<TypeDefinition> ();
