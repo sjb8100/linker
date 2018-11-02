@@ -1871,46 +1871,34 @@ namespace Mono.Linker.Steps {
 			return MarkTypeHierarchyIfRequiredFor(type, body.Method.DeclaringType);
 		}
 
-		void MarkBaseRequirements (MethodBody callingBody)
+		void MarkBaseRequirements (MethodBody body)
 		{
-			if(callingBody.Method.FullName.Contains("Mono.Linker"))
-				Console.WriteLine();
-			
-			var type = callingBody.Method.DeclaringType;
+			var type = body.Method.DeclaringType;
 
 			// We do not currently change the base type of value types
 			if (type.IsValueType)
 				return;
 			
 			// No need to do this for types derived from object.  It already has the lowest base class
-			if (type.BaseType == null || type.BaseType.Resolve()?.BaseType == null)
+			if (type.BaseType == null || type.BaseType.Resolve ()?.BaseType == null)
 				return;
 
-			foreach (var instruction in callingBody.Instructions) {
+			foreach (var instruction in body.Instructions) {
 				if (instruction.Operand == null)
 					continue;
 
-				if (instruction.Operand is FieldReference fieldReference)
-				{
-					if (MarkBaseRequirementsFromBody (fieldReference, callingBody))
+				if (instruction.Operand is FieldReference fieldReference) {
+					if (MarkBaseRequirementsFromBody (fieldReference, body))
 						return;
-				}
-				else if (instruction.Operand is MethodReference methodReference)
-				{
-					if (MarkBaseRequirementsFromBody (methodReference, callingBody))
+				} else if (instruction.Operand is MethodReference methodReference) {
+					if (MarkBaseRequirementsFromBody (methodReference, body))
 						return;
-				}
-				else if (instruction.Operand is PropertyReference propertyReference)
-				{
+				} else if (instruction.Operand is PropertyReference propertyReference) {
 					//throw new NotImplementedException();
-				}
-				else if (instruction.Operand is EventReference eventReference)
-				{
+				} else if (instruction.Operand is EventReference eventReference) {
 					//throw new NotImplementedException();
-				}
-				else if (instruction.Operand is TypeReference typeReference)
-				{
-					if (MarkBaseRequirementsFromBody (typeReference, callingBody))
+				} else if (instruction.Operand is TypeReference typeReference) {
+					if (MarkBaseRequirementsFromBody (typeReference, body))
 						return;
 				}
 			}
