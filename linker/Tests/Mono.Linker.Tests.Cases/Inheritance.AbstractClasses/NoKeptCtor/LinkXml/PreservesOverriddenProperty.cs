@@ -1,8 +1,7 @@
-using System;
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class LinkXmlPreservesOverriddenEvent {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.LinkXml {
+	public class PreservesOverriddenProperty {
 		public static void Main ()
 		{
 		}
@@ -10,9 +9,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		[Kept]
 		abstract class Base {
 			[Kept]
-			[KeptEventAddMethod]
-			[KeptEventRemoveMethod]
-			public abstract event EventHandler Foo;
+			public abstract int Foo { [Kept] get; [Kept] set; }
 		}
 
 		[Kept]
@@ -22,9 +19,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		class Bar : Base {
 			[Kept]
 			[KeptBackingField]
-			[KeptEventAddMethod]
-			[KeptEventRemoveMethod]
-			public override event EventHandler Foo;
+			public override int Foo { [Kept] get; [Kept] set; }
 		}
 	}
 }

@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class LinkXmlPreservesOverriddenMethodOverrideOfUsedVirtualStillRemoved {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.LinkXml {
+	public class PreservesOverriddenMethodOverrideOfUsedVirtualStillRemoved2 {
 		public static void Main ()
 		{
 			Base j = new Jar ();
@@ -15,7 +15,16 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 			public abstract void Foo ();
 
 			[Kept]
-			public virtual void One ()
+			public abstract void One ();
+		}
+
+		[Kept]
+		[KeptMember (".ctor()")]
+		[KeptBaseType (typeof (Base))]
+		abstract class Base2 : Base
+		{
+			[Kept]
+			public override void One ()
 			{
 			}
 		}
@@ -23,8 +32,8 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 		[Kept]
 		// We have to keep the base type in this case because the link xml requested that all methods be kept.
 		// Removing the base type with an override kept would produce invalid IL. 
-		[KeptBaseType (typeof (Base))]
-		class Bar : Base {
+		[KeptBaseType (typeof (Base2))]
+		class Bar : Base2 {
 			[Kept]
 			public override void Foo ()
 			{
@@ -37,8 +46,8 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 
 		[Kept]
 		[KeptMember (".ctor()")]
-		[KeptBaseType (typeof (Base))]
-		class Jar : Base {
+		[KeptBaseType (typeof (Base2))]
+		class Jar : Base2 {
 			[Kept]
 			public override void Foo ()
 			{

@@ -1,6 +1,6 @@
 ﻿<linker>
     <assembly fullname="test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <type fullname="Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.LinkXmlPreservesOverriddenMethod/Bar">
+        <type fullname="Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.LinkXml.PreservesOverriddenMethod/Bar">
             <method name="Foo"/>
         </type>
     </assembly>

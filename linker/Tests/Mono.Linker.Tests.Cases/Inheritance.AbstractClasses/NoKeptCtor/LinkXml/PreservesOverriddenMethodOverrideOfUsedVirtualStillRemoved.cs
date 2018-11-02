@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class LinkXmlPreservesOverriddenMethod2 {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.LinkXml {
+	public class PreservesOverriddenMethodOverrideOfUsedVirtualStillRemoved {
 		public static void Main ()
 		{
 			Base j = new Jar ();
@@ -15,7 +15,9 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 			public abstract void Foo ();
 
 			[Kept]
-			public abstract void One ();
+			public virtual void One ()
+			{
+			}
 		}
 
 		[Kept]
@@ -28,7 +30,6 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 			{
 			}
 
-			[Kept]
 			public override void One ()
 			{
 			}

@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
-	public class PreserveDependencyCausesOverriddenMethodToBePreserved {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.PreserveDependency {
+	public class CausesOverriddenMethodToBePreserved {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
