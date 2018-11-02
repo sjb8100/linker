@@ -858,6 +858,7 @@ namespace Mono.Linker.Steps {
 			MarkCustomAttributes (field);
 			MarkMarshalSpec (field);
 			DoAdditionalFieldProcessing (field);
+			MarkBaseRequirements (field);
 
 			var parent = reference.DeclaringType.Resolve ();
 			if (!Annotations.HasPreservedStaticCtor (parent))
@@ -1708,6 +1709,7 @@ namespace Mono.Linker.Steps {
 			MarkSecurityDeclarations (method);
 
 			MarkGenericParameterProvider (method);
+			MarkBaseRequirements (method);
 
 			if (ShouldMarkAsInstancePossible (method)) {
 				MarkRequirementsForInstantiatedTypes (method.DeclaringType);
@@ -1783,6 +1785,16 @@ namespace Mono.Linker.Steps {
 			}
 		}
 
+		void MarkBaseHierarchyAsRequired (TypeDefinition type, IEnumerable<TypeDefinition> bases)
+		{
+			MarkBaseTypeAsRequired (type);
+					
+			// We could mark only the bases that are really needed.  There could be unnecessary classes in between that we don't need
+			// but that is not worth the effort at this point
+			foreach (var @base in bases)
+				MarkBaseTypeAsRequired (@base);
+		}
+
 		void MarkBaseTypeAsRequired (TypeDefinition type)
 		{
 			Annotations.MarkBaseRequired (type);
@@ -1814,37 +1826,52 @@ namespace Mono.Linker.Steps {
 			MarkMethodsIf (type.Methods, IsVirtualAndHasPreservedParent);
 			DoAdditionalInstantiatedTypeProcessing (type);
 		}
+		
+		void MarkBaseRequirements(FieldDefinition field)
+		{
+			
+		}
+
+		void MarkBaseRequirements(MethodDefinition method)
+		{
+			MarkTypeHierarchyIfRequiredFor (method.ReturnType, method.DeclaringType);
+//			var type = method.DeclaringType;
+//			// We do not currently change the base type of value types
+//			if (type.IsValueType)
+//				return;
+//
+//			var bases = CollectBases (type);
+//
+//			// No need to do this for types derived from object.  It already has the lowest base class
+//			if (bases == null || bases.Count == 0)
+//				return;
+//
+//			if (IsTypeHierarchyRequiredFor (method, bases, type))
+//				MarkBaseHierarchyAsRequired (type, bases);
+		}
+
+		void MarkBaseRequirements(PropertyDefinition property)
+		{
+			// TODO : Is this needed?  
+			throw new NotImplementedException();
+		}
+		
 
 		void MarkBaseRequirementsFromInstruction (MethodBody callingBody)
 		{
+			if(callingBody.Method.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+			
 			var type = callingBody.Method.DeclaringType;
 
 			// We do not currently change the base type of value types
 			if (type.IsValueType)
 				return;
 
-			var bases = new List<TypeDefinition> ();
-			var current = type.BaseType;
-
-			while (current != null)
-			{
-				var resolved = current.Resolve ();
-				if (resolved == null)
-				{
-					HandleUnresolvedType (current);
-					return;
-				}
-
-				// Exclude Object.  We don't care about that
-				if (resolved.BaseType == null)
-					break;
-				
-				bases.Add (resolved);
-				current = resolved.BaseType;
-			}
+			var bases = CollectBases (type);
 
 			// No need to do this for types derived from object.  It already has the lowest base class
-			if (bases.Count == 0)
+			if (bases == null || bases.Count == 0)
 				return;
 
 			foreach (var instruction in callingBody.Instructions) {
@@ -1871,21 +1898,44 @@ namespace Mono.Linker.Steps {
 				}
 				else if (instruction.Operand is TypeReference typeReference)
 				{
+					if(type.FullName.Contains("Mono.Linker"))
+						Console.WriteLine();
+					
 					basesRequired = IsTypeHierarchyRequiredFor (typeReference, bases, type);
 				}
 
 				if (basesRequired) {
-					MarkBaseTypeAsRequired (type);
-					
-					// We could mark only the bases that are really needed.  There could be unnecessary classes in between that we don't need
-					// but that is not worth the effort at this point
-					foreach (var @base in bases)
-						MarkBaseTypeAsRequired (@base);
+					MarkBaseHierarchyAsRequired (type, @bases);
 
 					// We only need to do this once for now since we marked all bases.
 					return;
 				}
 			}
+		}
+
+		List<TypeDefinition> CollectBases (TypeDefinition type)
+		{
+			var bases = new List<TypeDefinition> ();
+			var current = type.BaseType;
+
+			while (current != null)
+			{
+				var resolved = current.Resolve ();
+				if (resolved == null)
+				{
+					HandleUnresolvedType (current);
+					return null;
+				}
+
+				// Exclude Object.  We don't care about that
+				if (resolved.BaseType == null)
+					break;
+				
+				bases.Add (resolved);
+				current = resolved.BaseType;
+			}
+
+			return bases;
 		}
 
 		bool IsTypeHierarchyRequiredFor (FieldReference field,  List<TypeDefinition> basesOfBodyType, TypeDefinition bodyType)
@@ -1920,6 +1970,39 @@ namespace Mono.Linker.Steps {
 				return true;
 
 			return false;
+		}
+		
+		void MarkTypeHierarchyIfRequiredFor(TypeReference type, TypeDefinition visibilityScope)
+		{
+			if (type.IsValueType)
+				return;
+
+			var resolved = type.Resolve ();
+			if (resolved == null) {
+				HandleUnresolvedType (type);
+				return;
+			}
+			
+			MarkTypeHierarchyIfRequiredFor (resolved, visibilityScope);
+		}
+
+		void MarkTypeHierarchyIfRequiredFor (TypeDefinition type, TypeDefinition visibilityScope)
+		{
+			// We do not currently change the base type of value types
+			if (type.IsValueType)
+				return;
+			
+			if(type.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+
+			var basesOfBody = CollectBases (visibilityScope);
+
+			// No need to do this for types derived from object.  It already has the lowest base class
+			if (basesOfBody == null || basesOfBody.Count == 0)
+				return;
+
+			if (IsTypeHierarchyRequiredFor (type, basesOfBody, visibilityScope))
+				MarkBaseHierarchyAsRequired (visibilityScope, basesOfBody);
 		}
 
 		bool IsTypeHierarchyRequiredFor (MethodReference method,  List<TypeDefinition> basesOfBodyType, TypeDefinition bodyType)
@@ -1960,6 +2043,13 @@ namespace Mono.Linker.Steps {
 
 		bool IsTypeHierarchyRequiredFor (TypeReference type, List<TypeDefinition> basesOfBodyType, TypeDefinition bodyType)
 		{
+			if(type.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+			
+			// TODO : Is there a way for a generic parameter to cause the base type to be needed?
+			if (type is GenericParameter)
+				throw new NotImplementedException();
+			
 			var resolved = type.Resolve ();
 			if (resolved == null) {
 				HandleUnresolvedType (type);
@@ -2193,6 +2283,9 @@ namespace Mono.Linker.Steps {
 		protected virtual void HandleUnresolvedMethod (MethodReference reference)
 		{
 			if (!_context.IgnoreUnresolved) {
+				if (reference.IsSpecialArrayMethod ())
+					return;
+
 				throw new ResolutionException (reference);
 			}
 		}
