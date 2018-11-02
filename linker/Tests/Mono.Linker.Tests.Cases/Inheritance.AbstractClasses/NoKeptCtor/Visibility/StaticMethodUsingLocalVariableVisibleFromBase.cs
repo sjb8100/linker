@@ -1,6 +1,6 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility {
 	public class StaticMethodUsingLocalVariableVisibleFromBase {
 		public static void Main ()
 		{
@@ -23,7 +23,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor {
 				NestedType tmp = null;
 				// Do enough to prevent the compiler from optimizing away the local
 				if (tmp == null)
-					Helper();
+					Helper ();
 			}
 
 			[Kept]
