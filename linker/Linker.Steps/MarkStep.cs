@@ -1787,6 +1787,9 @@ namespace Mono.Linker.Steps {
 
 		void MarkBaseHierarchyAsRequired (TypeDefinition type, IEnumerable<TypeDefinition> bases)
 		{
+			if (type.FullName.Contains("Mono.Linker"))
+				Console.WriteLine();
+			
 			MarkBaseTypeAsRequired (type);
 					
 			// We could mark only the bases that are really needed.  There could be unnecessary classes in between that we don't need
@@ -1829,13 +1832,30 @@ namespace Mono.Linker.Steps {
 		
 		void MarkBaseRequirements (FieldDefinition field)
 		{
-			MarkTypeHierarchyIfRequiredFor (field.FieldType, field.DeclaringType);
+			MarkTypeHierarchyIfRequiredFor (field, field.DeclaringType);
 		}
 
-		void MarkBaseRequirements (MethodDefinition method)
+		bool MarkBaseRequirements(MethodDefinition method)
 		{
-			MarkTypeHierarchyIfRequiredFor (method.ReturnType, method.DeclaringType);
+			return MarkTypeHierarchyIfRequiredFor (method, method.DeclaringType);
+//			return MarkBaseRequirements(method, method.DeclaringType);
 		}
+
+//		bool MarkBaseRequirements (MethodReference method, TypeDefinition visibilityScope)
+//		{
+//			if (method.FullName.Contains("Mono.Linker"))
+//				Console.WriteLine();
+//
+//			if (MarkTypeHierarchyIfRequiredFor (method.ReturnType, visibilityScope))
+//				return true;
+//
+//			foreach (var parameter in method.Parameters) {
+//				if (MarkTypeHierarchyIfRequiredFor (parameter.ParameterType, visibilityScope))
+//					return true;
+//			}
+//
+//			return false;
+//		}
 
 		void MarkBaseRequirements (PropertyDefinition property)
 		{
@@ -1883,7 +1903,12 @@ namespace Mono.Linker.Steps {
 		
 		bool MarkBaseRequirementsFromBody (MethodReference method, MethodBody body)
 		{
-			return MarkTypeHierarchyIfRequiredFor (method, body.Method.DeclaringType);
+			if (MarkTypeHierarchyIfRequiredFor(method, body.Method.DeclaringType))
+				return true;
+
+			return false;
+
+//			return MarkBaseRequirements(method, body.Method.DeclaringType);
 		}
 		
 		bool MarkBaseRequirementsFromBody (TypeReference type, MethodBody body)
@@ -1900,6 +1925,9 @@ namespace Mono.Linker.Steps {
 				MarkBaseHierarchyAsRequired (visibilityScope, basesOfScope);
 				return true;
 			}
+
+			if (MarkTypeHierarchyIfRequiredFor(field.FieldType, visibilityScope))
+				return true;
 
 			return false;
 		}
@@ -1922,6 +1950,19 @@ namespace Mono.Linker.Steps {
 			if (BaseUtils.IsTypeHierarchyRequiredFor (method, basesOfScope, visibilityScope, HandleUnresolvedMethod)) {
 				MarkBaseHierarchyAsRequired (visibilityScope, basesOfScope);
 				return true;
+			}
+			
+			if (MarkTypeHierarchyIfRequiredFor (method.ReturnType, visibilityScope))
+				return true;
+
+			foreach (var parameter in method.Parameters) {
+				if (MarkTypeHierarchyIfRequiredFor(parameter.ParameterType, visibilityScope))
+					return true;
+			}
+
+			foreach (var generic in BaseUtils.AllGenericTypesFor (method)) {
+				if (MarkTypeHierarchyIfRequiredFor (generic, visibilityScope))
+					return true;
 			}
 
 			return false;

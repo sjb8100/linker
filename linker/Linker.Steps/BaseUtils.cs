@@ -46,9 +46,12 @@ namespace Mono.Linker.Steps
 		{
 			// TODO by Mike : Do I need this?  ProcessMethod is too late a point to use this.  When would I call this?
 			if (method is GenericInstanceMethod genericInstanceMethod)
-				throw new NotImplementedException();
+			{
+				foreach (var generic in genericInstanceMethod.GenericArguments)
+					yield return generic;
+			}
 
-			yield break;
+			//yield break;
 		}
 		
 		public static List<TypeDefinition> CollectBases (TypeDefinition type, Action<TypeReference> handleUnresolved)
