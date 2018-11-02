@@ -193,6 +193,7 @@
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericConstraintOnMethod2.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericConstraintOnMethod3.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericConstraintOnType.cs" />
+    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericConstraintOnTypeFromField.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericOnField.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericOnMethodInOtherType.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericInParameter.cs" />
