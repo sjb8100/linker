@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
 namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility.Generics {
-	public class StaticMethodUsingNestedProtectedTypeFromBaseAsGenericOnType2 {
+	public class StaticMethodUsingNestedProtectedTypeFromBaseAsGenericConstraintOnType {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
@@ -23,24 +23,25 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibil
 			[Kept]
 			public static void StaticMethod ()
 			{
-				new NestedInStatic<NestedType> ().Method ();
+				HelperClass<DerivedFromNested>.Helper ();
 			}
 
-			// Needs a base type to trigger a more complex scenario
 			[Kept]
-			[KeptMember (".ctor()")]
-			[KeptBaseType (typeof (BaseInStatic))]
-			class NestedInStatic<NestedType> : BaseInStatic {
+			class HelperClass<T> where T : NestedType {
 				[Kept]
-				public void Method ()
+				public static Container<T> Helper ()
 				{
-					var tmp = typeof (NestedType).ToString ();
+					return null;
 				}
 			}
+			
+			[Kept]
+			class Container<T> {
+			}
 
 			[Kept]
-			[KeptMember (".ctor()")]
-			class BaseInStatic {
+			[KeptBaseType (typeof (NestedType))]
+			class DerivedFromNested : NestedType {
 			}
 		}
 	}
