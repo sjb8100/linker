@@ -29,8 +29,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibil
 			// Needs a base type to trigger a more complex scenario
 			[Kept]
 			[KeptMember (".ctor()")]
-			class NestedInStatic<NestedType> : BaseInStatic
-			{
+			class NestedInStatic<NestedType> : BaseInStatic {
 				[Kept]
 				public void Method ()
 				{

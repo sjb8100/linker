@@ -190,6 +190,7 @@
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\PreserveDependency\PreservesCtor.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\UseNonStaticMethodInOtherType.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericConstraint.cs" />
+    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericOnMethodInOtherType.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericInParameter.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericInParameter2.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility.Generics\StaticMethodUsingNestedProtectedTypeFromBaseAsGenericInReturnValue.cs" />
@@ -200,12 +201,13 @@
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticFieldWithNestedPublicGenericFromBase.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingLocalVariableVisibleFromBase.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedProtectedTypeFromBaseAsParameter.cs" />
+    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedProtectedTypeFromBaseAsParameter2.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedProtectedTypeFromBaseInReturnValue.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedPublicTypeFromBaseInReturnValue.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedPublicValueTypeFromBaseAsParameter.cs" />
-    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedTypeFromBase.cs" />
-    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedTypeFromBase2.cs" />
-    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedTypeFromBase3.cs" />
+    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedProtectedTypeFromBaseInBody.cs" />
+    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedProtectedTypeFromBaseInBody2.cs" />
+    <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingNestedProtectedTypeFromBaseInBody3.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingPublicNestedTypeFromBase.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticMethodUsingPublicNestedTypeFromBase2.cs" />
     <Compile Include="Inheritance.AbstractClasses\NoKeptCtor\Visibility\StaticPropertyWithNestedProtectedGenericFromBase.cs" />

@@ -1,7 +1,7 @@
 using Mono.Linker.Tests.Cases.Expectations.Assertions;
 
-namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility {
-	public class StaticMethodUsingNestedProtectedTypeFromBaseAsParameter {
+namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibility.Generics {
+	public class StaticMethodUsingNestedProtectedTypeFromBaseAsGenericOnMethodInOtherType {
 		public static void Main ()
 		{
 			StaticMethodOnlyUsed.StaticMethod ();
@@ -23,11 +23,14 @@ namespace Mono.Linker.Tests.Cases.Inheritance.AbstractClasses.NoKeptCtor.Visibil
 			[Kept]
 			public static void StaticMethod ()
 			{
-				Helper (null);
+				OtherType.Method<NestedType> ();
 			}
+		}
 
+		[Kept]
+		class OtherType {
 			[Kept]
-			private static void Helper (NestedType arg)
+			public static void Method<T> ()
 			{
 			}
 		}
