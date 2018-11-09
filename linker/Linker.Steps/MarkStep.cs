@@ -1934,8 +1934,15 @@ namespace Mono.Linker.Steps {
 						if (resolvedConstraint.IsInterface)
 							throw new NotImplementedException ("TODO by Mike : Implement Interfaces.  Write more tests");
 						
-						if (basesOfGeneric.Contains(constraint)) {
-							throw new NotImplementedException("TODO by Mike : Implement.  Write more tests");
+						if (basesOfGeneric.Contains (constraint))
+						{
+//							MarkTypeHierarchyIfRequiredFor(resolvedConstraint, resolved.DeclaringType);
+							if (BaseUtils.IsTypeHierarchyRequiredForType(resolvedConstraint, basesOfGeneric.ToArray(), resolvedGeneric))
+							{
+								var basesOfMethod = BaseUtils.CollectBases(resolved.DeclaringType, HandleUnresolvedType);
+								MarkBaseHierarchyAsRequired(resolved.DeclaringType, basesOfMethod);
+//								throw new NotImplementedException("TODO by Mike : Implement.  Write more tests");
+							}
 						}
 					}
 				}
