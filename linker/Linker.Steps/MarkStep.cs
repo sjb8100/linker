@@ -1892,28 +1892,53 @@ namespace Mono.Linker.Steps {
 		
 		bool MarkBaseRequirementsFromBody (MethodReference method, MethodBody body)
 		{
-			MarkTypeHierarchyIfRequiredFor(method, body.Method.DeclaringType);
+			MarkTypeHierarchyIfRequiredFor (method, body.Method.DeclaringType);
 
-			var generics = BaseUtils.AllGenericTypesFor(method).ToArray();
+			var generics = BaseUtils.AllGenericTypesFor (method).ToArray ();
 			
 			if (method.FullName.Contains("Mono.Linker"))
 				Console.WriteLine();
 
-			var resolved = method.Resolve();
+			var resolved = method.Resolve ();
 			if (resolved == null)
 			{
-				HandleUnresolvedMethod(method);
+				HandleUnresolvedMethod (method);
 				return false;
 			}
 
-			var constraints = BaseUtils.ConstraintsFor(resolved).ToArray();
+			var constraints = BaseUtils.ConstraintsFor (resolved).ToArray ();
 
 			if (generics.Length > 0 && constraints.Length > 0)
 			{
 				if (method.FullName.Contains("Mono.Linker"))
 					Console.WriteLine();
-				
-				throw new NotImplementedException("TODO by Mike : Implement.  Write more tests");
+
+				foreach (var generic in generics) {
+					var resolvedGeneric = generic.Resolve ();
+					if (resolvedGeneric == null)
+					{
+						HandleUnresolvedType (generic);
+						continue;
+					}
+					
+					var basesOfGeneric = BaseUtils.CollectBases (resolvedGeneric, HandleUnresolvedType);
+					
+					foreach (var constraint in constraints) {
+						var resolvedConstraint = constraint.Resolve ();
+						if (resolvedConstraint == null)
+						{
+							HandleUnresolvedType (constraint);
+							continue;
+						}
+						
+						if (resolvedConstraint.IsInterface)
+							throw new NotImplementedException ("TODO by Mike : Implement Interfaces.  Write more tests");
+						
+						if (basesOfGeneric.Contains(constraint)) {
+							throw new NotImplementedException("TODO by Mike : Implement.  Write more tests");
+						}
+					}
+				}
 			}
 
 			return false;
